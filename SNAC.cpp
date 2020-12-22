@@ -13,54 +13,21 @@ using namespace std;
 using namespace arma;
 
 void parseInput(string filename, Structure *input);
-Mat<double>createLocalStiffness(Element *e);
-size_t split(const string &txt, vector<string> &strs, char ch);
 int dirConvert (string dir);
-
-Mat<double> constrainK(Mat<double> K, Structure *system) {
-	// Modify Force Vector and Stiffness Matrix for given boundary condition
-	Mat<double> Kcopy = K;
-	int nBounds = (int)system->bounds.size();
-	int nDof = (int)system->points.size()*3;
-	for (int iBound = 0; iBound < nBounds; iBound++) {
-		int dof = system->bounds[iBound].dof;
-		for (int i = 0; i < nDof; i++) {
-			system->globalLoad(i) -= Kcopy(dof,i)*system->bounds[iBound].disp;
-			Kcopy(i,dof) = 0;
-			Kcopy(dof,i) = 0;
-		}
-		system->globalLoad(dof) = system->bounds[iBound].disp;
-		Kcopy(dof,dof) = 1;
-	}
-	return Kcopy;
-}
+size_t split(const string &txt, vector<string> &strs, char ch);
 
 int main(int argc, char *argv[]) {
 	if (argc != 2)
 		throw runtime_error("Please specify input file");
+	
 	Structure system;
 	parseInput(argv[1], &system);
-	int nEle = (int)system.elements.size();
-	int nDof = (int)system.points.size()*3;
-	Mat<double> K = zeros(nDof,nDof);
 	
-	for (int e = 0; e < nEle; e++) {
-		Mat<double> KBar;
-		KBar = createLocalStiffness(&system.elements[e]);
-		for (int localI = 0; localI < 6; localI++) {
-			for (int localJ = 0; localJ < 6; localJ++) {
-				int globalI = system.elements[e].IDArray[localI];
-				int globalJ = system.elements[e].IDArray[localJ];
-				K(globalI, globalJ) += KBar(localI, localJ);
-			}
-		}
-	}
-	Mat<double> Kbounded = constrainK(K, &system);
-	Mat<double> u = solve(Kbounded, system.globalLoad);
-	cout << "Solved u\n" << u << endl;
-	/* TODO
-	 * Calculate Element forces from nodal disp & Solved Force Vector
-	 */
+	system.genGlobalK();
+	system.solve();
+	
+	cout << system.u << endl;
+
 	return 0;
 }
 
@@ -79,13 +46,14 @@ void parseInput(string filename, Structure *input) {
 				continue;
 			} else if (line == "ELEMENTS") {
 				inputBlock = 1;
-				input->globalLoad.zeros((int)input->points.size()*3);
 				continue;
 			} else if (line == "BOUNDS") {
 				inputBlock = 2;
 				continue;
 			} else if (line == "LOADING") {
 				inputBlock = 3;
+				// done with points/elements/bounds, can safely save state
+				input->setSize();
 				continue;
 			} else if (line == "") {
 				inputBlock = -1;
@@ -168,34 +136,6 @@ int dirConvert (string dir) {
 		throw runtime_error("Direction must be 'X', 'Y', or 'Z'");
 	}
 	return dof;
-}
-
-Mat<double> createLocalStiffness(Element *e) {
-	// Dereference into local variables for clarity
-	double E = e->E;
-	double I = e->I;
-	double A = e->A;
-	double L = e->L;
-	// 1D Local Stiffness Matrix
-	Mat<double>localK = {	{E*A/L,       0,       0},
-							{    0, 4*E*I/L, 2*E*I/L},
-							{    0, 2*E*I/L, 4*E*I/L}};
-	// Rigid Body Matrix
-	Mat<double>RB = {	{-1,   0, 0, 1,    0, 0},
-						{ 0, 1/L, 1, 0, -1/L, 0},
-						{ 0, 1/L, 0, 0, -1/L, 1}};
-	// Rotational Matrix
-    double c = cos(e->theta);
-    double s = sin(e->theta);
-	Mat<double>ROT = {	{ c, s, 0, 0, 0, 0},
-						{-s, c, 0, 0, 0, 0},
-						{ 0, 0, 1, 0, 0, 0},
-						{ 0, 0, 0, c, s, 0},
-						{ 0, 0, 0,-s, c, 0},
-						{ 0, 0, 0, 0, 0, 1}};
-	// Combine into Global Domain
-	Mat<double> kBar = ROT.t() * RB.t() * localK * RB * ROT;
-	return kBar;
 }
 
 size_t split(const string &txt, vector<string> &strs, char ch) {
