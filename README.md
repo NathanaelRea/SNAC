@@ -2,7 +2,13 @@
 
 Structural Numeric Analysis in C++
 
-A structural analysis solver nobody needed in C++. Just a proof of concept for now, can only add point and distributed loads on elements, and only outputs the solved u vector.
+A very simple structural analysis solver nobody needed, and especially not in C++. Just a proof of concept for now.
+
+Lmitations:
+2D Linear Small Deformations
+Only point and distributed loads on elements
+Only outputs the solved u vector and local forces
+Input file needs to be in correct order
 
 ## Compile with correct libraries
 
@@ -39,7 +45,7 @@ ELEMENT 1 POINT -10 96
 Output:
 
 ```
-Solved u
+Solved displacement vector
         0
         0
         0
@@ -52,4 +58,28 @@ Solved u
    0.5350
         0
    0.0034
+
+Local Forces for Element 0
+   3.1116e+00
+   1.7334e+01
+   9.6683e+02
+  -3.1116e+00
+  -2.3337e+00
+   2.1321e+02
+
+Local Forces for Element 1
+   5.6843e-14
+   3.8895e+00
+  -2.1321e+02
+  -5.6843e-14
+   6.1105e+00
+  -1.2506e-12
+
+Local Forces for Element 2
+   6.1105e+00
+   3.5527e-15
+   6.8212e-13
+  -6.1105e+00
+  -3.5527e-15
+            0
 ```

@@ -23,10 +23,15 @@ int main(int argc, char *argv[]) {
 	Structure system;
 	parseInput(argv[1], &system);
 	
-	system.genGlobalK();
+	system.assembleK();
 	system.solve();
 	
-	cout << system.u << endl;
+	cout << "Solved displacement vector\n" << system.U << endl;
+	
+	for (int e = 0; e < system.nEle; e++) {
+		printf("Local Forces for Element %i\n",e);
+		cout << system.elements[e].Fe << endl;
+	}
 
 	return 0;
 }
@@ -52,7 +57,8 @@ void parseInput(string filename, Structure *input) {
 				continue;
 			} else if (line == "LOADING") {
 				inputBlock = 3;
-				// done with points/elements/bounds, can safely save state
+				// could have each input placed in stack, get sizes, alocate matricies, then parse
+				// this would allow input file to have sections in any order
 				input->setSize();
 				continue;
 			} else if (line == "") {
@@ -100,14 +106,14 @@ void parseInput(string filename, Structure *input) {
 						if (data[2] == "DISTRIBUTED") {
 							double w1 = atof(data[3].c_str());
 							double w2 = atof(data[4].c_str());
-							tmpLoad = { (7*w1+3*w2)*L/20, (w1/2+w2/3)*pow(L,2)/10, \
-										(3*w1+7*w2)*L/20,-(w1/3+w2/2)*pow(L,2)/10};
+							tmpLoad = { (7*w1+3*w2)*L/20, (w1/2+w2/3)*pow(L,2)/10,
+								(3*w1+7*w2)*L/20,-(w1/3+w2/2)*pow(L,2)/10};
 						} else if (data[2] == "POINT") {
 							double P = atof(data[3].c_str());
 							double a = atof(data[4].c_str());
 							double b = L-a;
-							tmpLoad = { P*pow(b,2)*(3*a+b)/pow(L,3), P*a*pow(b,2)/pow(L,2), \
-										P*pow(a,2)*(3*b+a)/pow(L,3),-P*b*pow(a,2)/pow(L,2)};
+							tmpLoad = { P*pow(b,2)*(3*a+b)/pow(L,3), P*a*pow(b,2)/pow(L,2),
+								P*pow(a,2)*(3*b+a)/pow(L,3),-P*b*pow(a,2)/pow(L,2)};
 						} else {
 							throw runtime_error("ELEMENT type loading must be either 'DISTRIBUTED' or 'POINT'");
 						}
@@ -141,18 +147,18 @@ int dirConvert (string dir) {
 size_t split(const string &txt, vector<string> &strs, char ch) {
 	// from https://stackoverflow.com/questions/5888022/split-string-by-single-spaces
 	// used to parse input file lines
-    size_t pos = txt.find( ch );
-    size_t initialPos = 0;
-    strs.clear();
-
-    // Decompose statement
-    while( pos != std::string::npos ) {
+	size_t pos = txt.find( ch );
+	size_t initialPos = 0;
+	strs.clear();
+	
+	// Decompose statement
+	while( pos != std::string::npos ) {
         strs.push_back( txt.substr( initialPos, pos - initialPos ) );
         initialPos = pos + 1;
         pos = txt.find( ch, initialPos );
-    }
-
-    // Add the last one
-    strs.push_back( txt.substr( initialPos, min( pos, txt.size() ) - initialPos + 1 ) );
-    return strs.size();
+	}
+	
+	// Add the last one
+	strs.push_back( txt.substr( initialPos, min( pos, txt.size() ) - initialPos + 1 ) );
+	return strs.size();
 }
