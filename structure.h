@@ -1,5 +1,12 @@
 #include<vector>
 
+struct RawInput {
+	std::vector<std::vector <std::string>> points;
+	std::vector<std::vector <std::string>> elements;
+	std::vector<std::vector <std::string>> bounds;
+	std::vector<std::vector <std::string>> loads;
+};
+
 struct Point {
 	int n;
 	double x, y;
@@ -68,9 +75,6 @@ struct Element {
 };
 
 struct Structure {
-	int nDof = 0;
-	int nEle = 0;
-	int nBounds = 0;
 	std::vector<Point> points;
 	std::vector<Element> elements;
 	std::vector<Bound> bounds;
@@ -79,10 +83,7 @@ struct Structure {
 	arma::Mat<double> Fsolved;
 	arma::Mat<double> K;
 	arma::Mat<double> Kbounded;
-	void setSize() {
-		nDof = (int)points.size()*3;
-		nEle  = (int)elements.size();
-		nBounds = (int)bounds.size();
+	void setSize(int nDof) {
 		U.zeros(nDof);
 		F.zeros(nDof);
 		K.zeros(nDof, nDof);
@@ -99,6 +100,7 @@ struct Structure {
 		e->addExtF(loadVector);
 	}
 	void assembleK() {
+		int nEle = (int)elements.size();
 		for (int e = 0; e < nEle; e++) {
 			elements[e].genK();
 			for (int localI = 0; localI < 6; localI++) {
@@ -113,6 +115,8 @@ struct Structure {
 	void constrainK() {
 		// Modify Force Vector and Stiffness Matrix for given boundary condition
 		Kbounded = K;
+		int nDof = (int)points.size()*3;
+		int nBounds = (int)bounds.size();
 		for (int iBound = 0; iBound < nBounds; iBound++) {
 			int dof = bounds[iBound].dof;
 			for (int i = 0; i < nDof; i++) {
@@ -127,6 +131,7 @@ struct Structure {
 	void solve() {
 		constrainK();
 		U = arma::solve(Kbounded, F);
+		int nEle = (int)elements.size();
 		for (int e = 0; e < nEle; e++) {
 			elements[e].calcFlocal(U);
 		}
