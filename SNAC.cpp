@@ -27,14 +27,9 @@ int main(int argc, char *argv[]) {
 	system.assembleK();
 	system.solve();
 	
-	cout << "Solved displacement vector\n" << system.U << endl;
+	system.printNodeDisp();
+	system.printEleForce();
 	
-	int nEle = (int)system.elements.size();
-	for (int e = 0; e < nEle; e++) {
-		printf("Local Forces for Element %i\n",e);
-		cout << system.elements[e].Fe << endl;
-	}
-
 	return 0;
 }
 
@@ -124,7 +119,12 @@ void parseRawInput(RawInput *input, Structure *s) {
 	for (int i = 0; i < nLoad; i++) {
 		data = input->loads[i];
 		vector<double> tmpLoad;
-		if (data[0] == "ELEMENT") {
+		if (data[0] == "POINT") {
+			int p = stoi(data[1]);
+			int dof = s->points[p].n*3 + dirConvert(data[2]);
+			double load = atof(data[3].c_str());
+			s->addPointLoad(dof, load);
+		} else if (data[0] == "ELEMENT") {
 			Element *tmpElement = &s->elements[stoi(data[1])];
 			double L = tmpElement->L;
 			// tmpLoad = {F1, M1, F2, M2}
@@ -145,7 +145,7 @@ void parseRawInput(RawInput *input, Structure *s) {
 			// Add Local Element Vector to structure
 			s->addElementLoad(tmpElement, tmpLoad);
 		} else {
-			throw runtime_error("Can only handle Loading of type 'ELEMENT'");
+			throw runtime_error("Can only handle Loading of type 'ELEMENT' or 'POINT'");
 		}
 	}
 }

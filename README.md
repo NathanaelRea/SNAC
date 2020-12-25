@@ -8,13 +8,31 @@ Lmitations:
 2D Linear Small Deformations
 Only point and distributed loads on elements
 Only outputs the solved u vector and local forces
-Input file needs to be in correct order
 
 ## Compile with correct libraries
 
 ```
 $ g++ -std=c++17 -O2 -larmadillo -llapack -lblas
 ```
+
+## Input Syntax
+```
+POINTS
+<X> <Y>
+
+ELEMENTS
+<P#1> <P#2> <E> <I> <A>
+
+BOUNDS
+<P#> <DIR> <DISP>
+
+LOADING
+ELEMENT <E#> DISTRIBUTED <W1> <W2>
+ELEMENT <E#> POINT <LOAD> <DIST>
+POINT <P#> <DIR> <LOAD>
+```
+Points and Elements are 0 indexed
+
 
 ## Example input file
 
@@ -45,41 +63,25 @@ ELEMENT 1 POINT -10 96
 Output:
 
 ```
-Solved displacement vector
-        0
-        0
-        0
-   0.2095
-  -0.1587
-  -0.0023
-   0.2095
-  -0.0020
-   0.0034
-   0.5350
-        0
-   0.0034
+Point Displacement (X,Y,R)
+Point 0
+(0.000000, 0.000000, 0.000000)
+Point 1
+(0.209509, -0.158741, -0.002346)
+Point 2
+(0.209509, -0.002023, 0.003391)
+Point 3
+(0.535009, 0.000000, 0.003391)
 
-Local Forces for Element 0
-   3.1116e+00
-   1.7334e+01
-   9.6683e+02
-  -3.1116e+00
-  -2.3337e+00
-   2.1321e+02
+Local Element End Forces (A,V,M)
+Element 0
+(3.111614, 17.333710, 966.832579)
+(-3.111614, -2.333710, 213.212670)
+Element 1
+(0.000000, 3.889517, -213.212670)
+(-0.000000, 6.110483, -0.000000)
+Element 2
+(6.110483, 0.000000, 0.000000)
+(-6.110483, -0.000000, 0.000000)
 
-Local Forces for Element 1
-   5.6843e-14
-   3.8895e+00
-  -2.1321e+02
-  -5.6843e-14
-   6.1105e+00
-  -1.2506e-12
-
-Local Forces for Element 2
-   6.1105e+00
-   3.5527e-15
-   6.8212e-13
-  -6.1105e+00
-  -3.5527e-15
-            0
 ```

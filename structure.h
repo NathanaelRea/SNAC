@@ -88,6 +88,9 @@ struct Structure {
 		F.zeros(nDof);
 		K.zeros(nDof, nDof);
 	}
+	void addPointLoad(int dof, double load) {
+		F(dof) += load;
+	}
 	void addElementLoad(Element *e, std::vector<double> &loadVector) {
 		// loadVector = {F1, M1, F2, M2}, use right hand rule
 		arma::Mat<double> loadTrans = {
@@ -137,5 +140,24 @@ struct Structure {
 		}
 		// Fsolved could be used to show reacitons in the future
 		Fsolved = K * U;
+	}
+	void printNodeDisp() {
+		int nPoints = (int)points.size();
+		printf("Point Displacement (X,Y,R)\n" );
+		for (int p = 0; p < nPoints; p++) {
+			printf("Point %i\n",p);
+			printf("(%f, %f, %f)\n",U(p*3),U(p*3+1),U(p*3+2));
+		}
+		printf("\n");
+	}
+	void printEleForce() {
+		int nEle = (int)elements.size();
+		printf("Local Element End Forces (A,V,M)\n");
+		for (int e = 0; e < nEle; e++) {
+			printf("Element %i\n",e);
+			printf("(%f, %f, %f)\n",elements[e].Fe(0),elements[e].Fe(1),elements[e].Fe(2));
+			printf("(%f, %f, %f)\n",elements[e].Fe(3),elements[e].Fe(4),elements[e].Fe(5));
+		}
+		printf("\n");
 	}
 };
