@@ -5,15 +5,12 @@ Structural Numeric Analysis in C++
 A very simple structural analysis solver nobody needed, and especially not in C++. Just a proof of concept for now.
 
 Lmitations:
+
 2D Linear Small Deformations
+
 Only point and distributed loads on elements
-Only outputs the solved u vector and local forces
 
-## Compile with correct libraries
-
-```
-$ g++ -std=c++17 -O2 -larmadillo -llapack -lblas
-```
+Output: Solved u vector, local forces, simple OpenGL plot
 
 ## Input Syntax
 ```
@@ -31,10 +28,10 @@ ELEMENT <E#> DISTRIBUTED <W1> <W2>
 ELEMENT <E#> POINT <LOAD> <DIST>
 POINT <P#> <DIR> <LOAD>
 ```
-Points and Elements are 0 indexed
+(Points and Elements are 0 indexed)
 
 
-## Example input file
+## Example
 
 ```
 POINTS
@@ -61,6 +58,8 @@ ELEMENT 1 POINT -10 96
 ```
 
 Output:
+
+![Example](res/Example.png)
 
 ```
 Point Displacement (X,Y,R)
